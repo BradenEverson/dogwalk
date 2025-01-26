@@ -9,7 +9,20 @@ use std::{collections::HashMap, fs::File, future::Future, io::Read, pin::Pin};
 /// The service for holding context on all servos
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct PuppyService {
-    servos: HashMap<String, Servo>,
+    servos: HashMap<&'static str, Servo>,
+}
+
+impl PuppyService {
+    /// Register a servo with a name
+    pub fn register(&mut self, name: &'static str, index: usize) {
+        self.servos.insert(
+            name,
+            Servo {
+                index,
+                ..Default::default()
+            },
+        );
+    }
 }
 
 /// Internal context for servo motor
