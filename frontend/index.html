@@ -10,37 +10,18 @@
 <body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
     <h1 class="text-3xl font-bold mb-8 text-gray-800">DogWalk Control Panel 😎🐗</h1>
 
-    <div id="sliders" class="w-full max-w-4xl bg-white p-6 rounded-lg shadow-md">
-        <!-- Generate 12 sliders via JavaScript -->
-        <script>
-            for (let i = 0; i < 12; i++) {
-                document.write(`
-                    <div class="slider-container flex items-center mb-6">
-                        <label class="label font-medium text-gray-700 w-24 text-right mr-4" for="servo-${i}">Servo ${i}:</label>
-                        <input 
-                            type="range" 
-                            id="servo-${i}" 
-                            name="angle" 
-                            min="0" 
-                            max="145" 
-                            value="90" 
-                            oninput="document.getElementById('servo-value-${i}').textContent = this.value" 
-                            hx-get="/move?servo=${i}"  
-                            hx-trigger="input"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                        >
-                        <span id="servo-value-${i}" class="ml-4 text-gray-800 font-semibold">90</span>
-                    </div>
-                `);
-            }
-        </script>
-        <button 
-            class="mt-6 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition"
-            hx-post="/set-zeroes"
-        >
-            Set Zeros
-        </button>
+    <div id="sliders" class="w-full max-w-4xl bg-white p-6 rounded-lg shadow-md" 
+         hx-get="/get-servos" 
+         hx-trigger="load">
+        <!-- Sliders will be dynamically loaded here -->
     </div>
+
+    <button 
+        class="mt-6 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition"
+        hx-post="/set-zeroes"
+    >
+        Set Zeros
+    </button>
 </body>
 </html>
 

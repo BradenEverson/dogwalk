@@ -25,12 +25,25 @@ impl PuppyService {
             servos: Arc::new(Mutex::new(HashMap::default())),
         }
     }
+
+    /// Renders all servos as valid html
+    pub async fn render_servos(&self) -> String {
+        self.servos
+            .lock()
+            .await
+            .iter()
+            .map(|(idx, servo)| servo.render_html(*idx))
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
     /// Register a servo with a name
     pub async fn register(&mut self, name: &'static str, index: u8) {
         self.servos.lock().await.insert(
             index,
             Servo {
                 name,
+                angle: 90,
                 ..Default::default()
             },
         );
@@ -74,6 +87,30 @@ impl Servo {
     pub fn set_zero_offset(&mut self) {
         self.zero_offset = self.angle
     }
+
+    /// Writes the current servo state as an HTML string
+    pub fn render_html(&self, i: u8) -> String {
+        format!(
+            r#"<div class="slider-container flex items-center mb-6">
+    <label class="label font-medium text-gray-700 w-24 text-right mr-4" for="servo-{i}">{}</label>
+    <input 
+        type="range" 
+        id="servo-{i}" 
+        name="angle" 
+        min="0" 
+        max="145" 
+        value="{}" 
+        oninput="document.getElementById('servo-value-{i}').textContent = this.value" 
+        hx-get="/move?servo={i}"  
+        hx-trigger="input"
+        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+    >
+    <span id="servo-value-{i}" class="ml-4 text-gray-800 font-semibold">{}</span>
+</div>
+        "#,
+            self.name, self.angle, self.angle
+        )
+    }
 }
 
 impl Service<Request<body::Incoming>> for PuppyService {
@@ -98,7 +135,11 @@ impl Service<Request<body::Incoming>> for PuppyService {
                 }
 
                 (&Method::GET, "/get-servos") => {
-                    todo!("Get all servos with their current angles and names")
+                    let rendered = service.render_servos().await;
+
+                    response
+                        .status(StatusCode::OK)
+                        .body(Full::new(Bytes::copy_from_slice(rendered.as_bytes())))
                 }
 
                 (&Method::GET, "/move") => {
