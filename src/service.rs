@@ -94,7 +94,7 @@ impl Service<Request<body::Incoming>> for PuppyService {
                         .body(Full::new(Bytes::copy_from_slice(b"Yippee!")))
                 }
 
-                (&Method::POST, "/zero-align-servo") => {
+                (&Method::POST, "/set-zeroes") => {
                     todo!("Set a servo's zero offset")
                 }
 
