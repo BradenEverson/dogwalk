@@ -1,6 +1,7 @@
 use hyper::server::conn::http1;
 use hyper_util::rt::TokioIo;
 use puppydog::{msg::PuppyMsg, service::PuppyService};
+use rppal::i2c::I2c;
 use tokio::net::TcpListener;
 
 #[tokio::main]
