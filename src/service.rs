@@ -6,6 +6,7 @@ use hyper::{
 };
 use std::{collections::HashMap, fs::File, future::Future, io::Read, pin::Pin};
 use tokio::sync::mpsc::Sender;
+use url::Url;
 
 use crate::msg::PuppyMsg;
 
@@ -53,6 +54,7 @@ impl Service<Request<body::Incoming>> for PuppyService {
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
     fn call(&self, req: Request<body::Incoming>) -> Self::Future {
+        let send = self.controller_send.clone();
         Box::pin(async move {
             let response = Response::builder();
 
@@ -71,12 +73,39 @@ impl Service<Request<body::Incoming>> for PuppyService {
                     todo!("Get all servos with their current angles and names")
                 }
 
-                (&Method::POST, "/move") => {
-                    todo!("Move servo to new angle");
+                (&Method::GET, "/move") => {
+                    let uri = req.uri().to_string();
+                    let request_url = Url::parse(&format!("https://dumbfix.com/{}", uri)).unwrap();
+
+                    let query = request_url
+                        .query_pairs()
+                        .map(|(key, val)| (key.to_string(), val.to_string()))
+                        .collect::<HashMap<_, _>>();
+
+                    send.send(PuppyMsg::MoveServe(
+                        query["servo"].parse().expect("Parse to u8"),
+                        query["angle"].parse().expect("Parse to u16"),
+                    ))
+                    .await
+                    .expect("Send angle move to dog");
+
+                    response
+                        .status(StatusCode::OK)
+                        .body(Full::new(Bytes::copy_from_slice(b"Yippee!")))
                 }
 
                 (&Method::POST, "/zero-align-servo") => {
                     todo!("Set a servo's zero offset")
+                }
+
+                (&Method::GET, "/favicon.ico") => {
+                    let mut buf = vec![];
+                    let mut page = File::open("frontend/favicon.ico").expect("Failed to find file");
+                    page.read_to_end(&mut buf)
+                        .expect("Failed to read to buffer");
+                    response
+                        .status(StatusCode::OK)
+                        .body(Full::new(Bytes::copy_from_slice(&buf)))
                 }
 
                 _ => unimplemented!(),

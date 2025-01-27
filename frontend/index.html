@@ -1,12 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DogWalk Config</title>
-  <script src="https://unpkg.com/htmx.org"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servo Control Sliders</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <style>
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .label {
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>DogWalker Motor Config WebUI B)</h1>
+    <h1>Servo Control Sliders</h1>
+    <div id="sliders">
+        <!-- Generate 12 sliders via JavaScript -->
+        <script>
+            for (let i = 0; i < 12; i++) {
+                document.write(`
+                    <div class="slider-container">
+                        <label class="label" for="servo-${i}">Servo ${i}:</label>
+                        <input 
+                            type="range" 
+                            id="servo-${i}" 
+                            name="angle" 
+                            min="0" 
+                            max="180" 
+                            value="90" 
+                            oninput="document.getElementById('servo-value-${i}').textContent = this.value" 
+                            
+                            hx-get="/move?servo=${i}"  
+                            hx-trigger="input"                
+                        >
+                        <span id="servo-value-${i}">90</span>
+                    </div>
+                `);
+            }
+        </script>
+    </div>
 </body>
 </html>
+
