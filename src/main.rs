@@ -60,7 +60,6 @@ async fn main() {
     while let Some(msg) = rx.recv().await {
         match msg {
             PuppyMsg::MoveServe(idx, angle) => {
-                println!("Moving servo: {idx} to {angle} degrees");
                 move_servo(&mut pca9865, idx, angle).expect("Move servo");
             }
         }
