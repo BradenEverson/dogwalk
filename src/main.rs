@@ -1,11 +1,14 @@
 use hyper::server::conn::http1;
 use hyper_util::rt::TokioIo;
+#[cfg(feature = "runtime")]
 use pca9685_rppal::Pca9685;
 use puppydog::{msg::PuppyMsg, service::PuppyService};
 use tokio::net::TcpListener;
 
+#[cfg(feature = "runtime")]
 /// Minimum pulse length
 const SERVO_MIN: u16 = 150;
+#[cfg(feature = "runtime")]
 /// Maximum pulse length
 const SERVO_MAX: u16 = 600;
 
@@ -17,9 +20,14 @@ async fn main() {
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(10);
 
-    let mut pca9865 = Pca9685::new().expect("Create new PCA9685");
-    pca9865.init().expect("Initialize PCA9685");
-    pca9865.set_pwm_freq(50.0).expect("Set frequency to 50hz");
+    #[cfg(feature = "runtime")]
+    let mut pca9865 = {
+        let mut pca9865 = Pca9685::new().expect("Create new PCA9685");
+        pca9865.init().expect("Initialize PCA9685");
+        pca9865.set_pwm_freq(50.0).expect("Set frequency to 50hz");
+
+        pca9865
+    };
 
     let mut dog = PuppyService::with_send(tx);
 
@@ -60,18 +68,24 @@ async fn main() {
     while let Some(msg) = rx.recv().await {
         match msg {
             PuppyMsg::MoveServe(idx, angle) => {
+                #[cfg(not(feature = "runtime"))]
+                println!("Moving servo {idx} to {angle} degrees");
+
+                #[cfg(feature = "runtime")]
                 move_servo(&mut pca9865, idx, angle).expect("Move servo");
             }
         }
     }
 }
 
+#[cfg(feature = "runtime")]
 fn map_angle_to_pulse(angle: u16, servomin: u16, servomax: u16) -> u16 {
     let input_min = 0;
     let input_max = 180;
     servomin + (angle - input_min) * (servomax - servomin) / (input_max - input_min)
 }
 
+#[cfg(feature = "runtime")]
 fn move_servo(pca: &mut Pca9685, idx: u8, angle: u16) -> rppal::i2c::Result<()> {
     let len = map_angle_to_pulse(angle, SERVO_MIN, SERVO_MAX);
     pca.set_pwm(idx, 0, len)?;
