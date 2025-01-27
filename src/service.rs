@@ -25,7 +25,7 @@ impl PuppyService {
         }
     }
     /// Register a servo with a name
-    pub fn register(&mut self, name: &'static str, index: usize) {
+    pub fn register(&mut self, name: &'static str, index: u8) {
         self.servos.insert(
             name,
             Servo {
@@ -40,11 +40,11 @@ impl PuppyService {
 #[derive(Default, Clone, Copy, PartialEq, Debug)]
 pub struct Servo {
     /// Index in the MotorController
-    index: usize,
+    index: u8,
     /// Current servo angle
-    angle: f32,
+    angle: u16,
     /// The offset to zero the servo
-    zero_offset: f32,
+    zero_offset: u16,
 }
 
 impl Service<Request<body::Incoming>> for PuppyService {

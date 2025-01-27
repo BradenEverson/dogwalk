@@ -1,8 +1,13 @@
 use hyper::server::conn::http1;
 use hyper_util::rt::TokioIo;
+use pca9685_rppal::Pca9685;
 use puppydog::{msg::PuppyMsg, service::PuppyService};
-use rppal::i2c::I2c;
 use tokio::net::TcpListener;
+
+/// Minimum pulse length
+const SERVO_MIN: u16 = 150;
+/// Maximum pulse length
+const SERVO_MAX: u16 = 600;
 
 #[tokio::main]
 async fn main() {
@@ -11,6 +16,11 @@ async fn main() {
         .expect("Failed to bind to default");
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(10);
+
+    let mut pca9865 = Pca9685::new().expect("Create new PCA9685");
+    pca9865.init().expect("Initialize PCA9685");
+    pca9865.set_pwm_freq(50.0).expect("Set frequency to 50hz");
+
     let mut dog = PuppyService::with_send(tx);
 
     dog.register("FrontLeftHip", 0);
@@ -50,8 +60,21 @@ async fn main() {
     while let Some(msg) = rx.recv().await {
         match msg {
             PuppyMsg::MoveServe(idx, angle) => {
-                todo!("Move channel {idx} to {angle} degrees")
+                move_servo(&mut pca9865, idx, angle).expect("Move servo");
             }
         }
     }
+}
+
+fn map_angle_to_pulse(angle: u16, servomin: u16, servomax: u16) -> u16 {
+    let input_min = 0;
+    let input_max = 180;
+    servomin + (angle - input_min) * (servomax - servomin) / (input_max - input_min)
+}
+
+fn move_servo(pca: &mut Pca9685, idx: u8, angle: u16) -> rppal::i2c::Result<()> {
+    let len = map_angle_to_pulse(angle, SERVO_MIN, SERVO_MAX);
+    pca.set_pwm(idx, 0, len)?;
+
+    Ok(())
 }
