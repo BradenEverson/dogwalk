@@ -31,21 +31,21 @@ async fn main() {
 
     let mut dog = PuppyService::with_send(tx);
 
-    dog.register("FrontLeftHip", 0).await;
-    dog.register("FrontLeftThigh", 1).await;
-    dog.register("FrontLeftKnee", 2).await;
+    dog.register("FLHip", 0).await;
+    dog.register("FLThigh", 1).await;
+    dog.register("FLKnee", 2).await;
 
-    dog.register("FrontRightHip", 3).await;
-    dog.register("FrontRightThigh", 4).await;
-    dog.register("FrontRightKnee", 5).await;
+    dog.register("FRHip", 3).await;
+    dog.register("FRThigh", 4).await;
+    dog.register("FRKnee", 5).await;
 
-    dog.register("BackLeftHip", 6).await;
-    dog.register("BackLeftThigh", 7).await;
-    dog.register("BackLeftKnee", 8).await;
+    dog.register("BLHip", 6).await;
+    dog.register("BLThigh", 7).await;
+    dog.register("BLKnee", 8).await;
 
-    dog.register("BackRightHip", 9).await;
-    dog.register("BackRightThigh", 10).await;
-    dog.register("BackRightKnee", 11).await;
+    dog.register("BRHip", 9).await;
+    dog.register("BRThigh", 10).await;
+    dog.register("BRKnee", 11).await;
 
     tokio::spawn(async move {
         loop {
