@@ -49,10 +49,13 @@ impl PuppyService {
         );
     }
 
-    /// Asign a new angle to a servo
-    pub async fn assign_angle(&self, servo: u8, angle: u16) {
+    /// Asign a new angle to a servo and returns the offsetted true angle
+    pub async fn assign_angle(&self, servo: u8, angle: u16) -> u16 {
         if let Some(servo) = self.servos.lock().await.get_mut(&servo) {
             servo.set_angle(angle);
+            (angle as i16 + servo.zero_offset) as u16
+        } else {
+            0
         }
     }
 
@@ -74,7 +77,7 @@ pub struct Servo {
     /// Current servo angle
     angle: u16,
     /// The offset to zero the servo
-    zero_offset: u16,
+    zero_offset: i16,
 }
 
 impl Servo {
@@ -83,9 +86,9 @@ impl Servo {
         self.angle = angle
     }
 
-    /// Assigns the current angle to be the zero offset
+    /// Assigns the current angle to be the zero offset at 90
     pub fn set_zero_offset(&mut self) {
-        self.zero_offset = self.angle
+        self.zero_offset = self.angle as i16 - 90
     }
 
     /// Writes the current servo state as an HTML string
@@ -154,13 +157,13 @@ impl Service<Request<body::Incoming>> for PuppyService {
                     let servo = query["servo"].parse().expect("Parse to u8");
                     let angle = query["angle"].parse().expect("Parse to u16");
 
+                    let angle = service.assign_angle(servo, angle).await;
+
                     service
                         .controller_send
                         .send(PuppyMsg::MoveServe(servo, angle))
                         .await
                         .expect("Send angle move to dog");
-
-                    service.assign_angle(servo, angle).await;
 
                     response
                         .status(StatusCode::OK)
