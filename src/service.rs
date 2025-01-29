@@ -101,7 +101,7 @@ impl Servo {
         id="servo-{i}" 
         name="angle" 
         min="0" 
-        max="145" 
+        max="180" 
         value="{}" 
         oninput="document.getElementById('servo-value-{i}').textContent = this.value" 
         hx-get="/move?servo={i}"  
