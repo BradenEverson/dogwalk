@@ -3,5 +3,5 @@
 /// Any message the hardware may receive
 pub enum PuppyMsg {
     /// Move servo with `idx`(first argument) to `angle` degrees(second argument)
-    MoveServe(u8, u16),
+    MoveServe(u8, f32),
 }

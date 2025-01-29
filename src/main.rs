@@ -7,10 +7,10 @@ use tokio::net::TcpListener;
 
 #[cfg(feature = "runtime")]
 /// Minimum pulse length
-const SERVO_MIN: u16 = 150;
+const SERVO_MIN: f32 = 150f32;
 #[cfg(feature = "runtime")]
 /// Maximum pulse length
-const SERVO_MAX: u16 = 600;
+const SERVO_MAX: f32 = 600f32;
 
 #[tokio::main]
 async fn main() {
@@ -79,14 +79,14 @@ async fn main() {
 }
 
 #[cfg(feature = "runtime")]
-fn map_angle_to_pulse(angle: u16, servomin: u16, servomax: u16) -> u16 {
-    let input_min = 0;
-    let input_max = 180;
-    servomin + (angle - input_min) * (servomax - servomin) / (input_max - input_min)
+fn map_angle_to_pulse(angle: f32, servomin: f32, servomax: f32) -> u16 {
+    let input_min = 0f32;
+    let input_max = 180f32;
+    (servomin + (angle - input_min) * (servomax - servomin) / (input_max - input_min)) as u16
 }
 
 #[cfg(feature = "runtime")]
-fn move_servo(pca: &mut Pca9685, idx: u8, angle: u16) -> rppal::i2c::Result<()> {
+fn move_servo(pca: &mut Pca9685, idx: u8, angle: f32) -> rppal::i2c::Result<()> {
     let len = map_angle_to_pulse(angle, SERVO_MIN, SERVO_MAX);
     pca.set_pwm(idx, 0, len)?;
 

@@ -43,19 +43,19 @@ impl PuppyService {
             index,
             Servo {
                 name,
-                angle: 90,
+                angle: 90f32,
                 ..Default::default()
             },
         );
     }
 
     /// Asign a new angle to a servo and returns the offsetted true angle
-    pub async fn assign_angle(&self, servo: u8, angle: u16) -> u16 {
+    pub async fn assign_angle(&self, servo: u8, angle: f32) -> f32 {
         if let Some(servo) = self.servos.lock().await.get_mut(&servo) {
             servo.set_angle(angle);
-            (angle as i16 + servo.zero_offset) as u16
+            angle + servo.zero_offset
         } else {
-            0
+            0f32
         }
     }
 
@@ -75,20 +75,20 @@ pub struct Servo {
     /// Motor name
     name: &'static str,
     /// Current servo angle
-    angle: u16,
+    angle: f32,
     /// The offset to zero the servo
-    zero_offset: i16,
+    zero_offset: f32,
 }
 
 impl Servo {
     /// Sets a new angle
-    pub fn set_angle(&mut self, angle: u16) {
+    pub fn set_angle(&mut self, angle: f32) {
         self.angle = angle
     }
 
     /// Assigns the current angle to be the zero offset at 90
     pub fn set_zero_offset(&mut self) {
-        self.zero_offset = self.angle as i16 - 90
+        self.zero_offset = self.angle - 90f32
     }
 
     /// Writes the current servo state as an HTML string
@@ -102,6 +102,7 @@ impl Servo {
         name="angle" 
         min="0" 
         max="180" 
+        step="0.5"
         value="{}" 
         oninput="document.getElementById('servo-value-{i}').textContent = this.value" 
         hx-get="/move?servo={i}"  
@@ -155,7 +156,7 @@ impl Service<Request<body::Incoming>> for PuppyService {
                         .collect::<HashMap<_, _>>();
 
                     let servo = query["servo"].parse().expect("Parse to u8");
-                    let angle = query["angle"].parse().expect("Parse to u16");
+                    let angle = query["angle"].parse().expect("Parse to f32");
 
                     let angle = service.assign_angle(servo, angle).await;
 
