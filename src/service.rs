@@ -102,14 +102,26 @@ impl Servo {
         name="angle" 
         min="0" 
         max="180" 
-        step="0.5"
         value="{}" 
-        oninput="document.getElementById('servo-value-{i}').textContent = this.value" 
-        hx-get="/move?servo={i}"  
+        oninput="document.getElementById('servo-value-{i}').textContent = this.value; this.dispatchEvent(new Event('input'));" 
+        hx-get="/move?servo={i}&angle={{this.value}}"  
         hx-trigger="input"
         class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
     >
-    <span id="servo-value-{i}" class="ml-4 text-gray-800 font-semibold">{}</span>
+    <span id="servo-value-{i}" 
+        class="ml-4 text-gray-800 font-semibold cursor-pointer" 
+        contenteditable="true"
+        onblur="let v = parseFloat(this.textContent); 
+                let slider = document.getElementById('servo-{i}');
+                if (!isNaN(v) && v >= 0 && v <= 180) {{ 
+                    slider.value = v; 
+                    this.textContent = v;
+                    slider.dispatchEvent(new Event('input')); 
+                }} else {{
+                    this.textContent = slider.value;
+                }}">
+        {}
+    </span>
 </div>
         "#,
             self.name, self.angle, self.angle
