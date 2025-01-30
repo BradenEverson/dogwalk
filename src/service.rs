@@ -94,7 +94,7 @@ impl Servo {
 
     /// Writes the current servo state as an HTML string
     pub fn render_html(&self, i: u8) -> String {
-        let breakpoint = if (i + 1) % 3 == 0 { "<hr/><br/>" } else { "" };
+        let breakpoint = if (i + 1) % 3 == 0 { "<br/>" } else { "" };
         format!(
             r#"<div class="slider-container flex items-center mb-6">
     <label class="label font-medium text-gray-700 w-24 text-right mr-4" for="servo-{i}">{}</label>
