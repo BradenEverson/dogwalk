@@ -14,7 +14,7 @@ use crate::msg::PuppyMsg;
 #[derive(Clone, Debug)]
 pub struct PuppyService {
     controller_send: Sender<PuppyMsg>,
-    servos: Arc<Mutex<HashMap<u8, Servo>>>,
+    servos: Arc<Mutex<Vec<Servo>>>,
 }
 
 impl PuppyService {
@@ -22,7 +22,7 @@ impl PuppyService {
     pub fn with_send(controller_send: Sender<PuppyMsg>) -> Self {
         Self {
             controller_send,
-            servos: Arc::new(Mutex::new(HashMap::default())),
+            servos: Arc::new(Mutex::new(vec![])),
         }
     }
 
@@ -32,7 +32,8 @@ impl PuppyService {
             .lock()
             .await
             .iter()
-            .map(|(idx, servo)| servo.render_html(*idx))
+            .enumerate()
+            .map(|(idx, servo)| servo.render_html(idx as u8))
             .collect::<Vec<_>>()
             .join("\n")
     }
@@ -40,7 +41,7 @@ impl PuppyService {
     /// Register a servo with a name
     pub async fn register(&mut self, name: &'static str, index: u8) {
         self.servos.lock().await.insert(
-            index,
+            index as usize,
             Servo {
                 name,
                 angle: 90f32,
@@ -51,7 +52,7 @@ impl PuppyService {
 
     /// Asign a new angle to a servo and returns the offsetted true angle
     pub async fn assign_angle(&self, servo: u8, angle: f32) -> f32 {
-        if let Some(servo) = self.servos.lock().await.get_mut(&servo) {
+        if let Some(servo) = self.servos.lock().await.get_mut(servo as usize) {
             servo.set_angle(angle);
             angle + servo.zero_offset
         } else {
@@ -64,7 +65,7 @@ impl PuppyService {
         self.servos
             .lock()
             .await
-            .values_mut()
+            .iter_mut()
             .for_each(|servo| servo.set_zero_offset());
     }
 }
@@ -93,6 +94,7 @@ impl Servo {
 
     /// Writes the current servo state as an HTML string
     pub fn render_html(&self, i: u8) -> String {
+        let breakpoint = if (i + 1) % 3 == 0 { "<hr/><br/>" } else { "" };
         format!(
             r#"<div class="slider-container flex items-center mb-6">
     <label class="label font-medium text-gray-700 w-24 text-right mr-4" for="servo-{i}">{}</label>
@@ -123,8 +125,9 @@ impl Servo {
         {}
     </span>
 </div>
+                {}
         "#,
-            self.name, self.angle, self.angle
+            self.name, self.angle, self.angle, breakpoint
         )
     }
 }
