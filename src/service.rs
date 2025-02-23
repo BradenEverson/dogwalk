@@ -193,6 +193,31 @@ impl Service<Request<body::Incoming>> for PuppyService {
                         .status(StatusCode::OK)
                         .body(Full::new(Bytes::copy_from_slice(b"Yippee!")))
                 }
+                // Serve Local HTMX
+                (&Method::GET, "/htmx") => {
+                    let mut buf = vec![];
+                    let mut file =
+                        File::open("static/js/htmx.min.js").expect("Failed to find file");
+                    file.read_to_end(&mut buf)
+                        .expect("Failed to read to buffer");
+                    response
+                        .status(StatusCode::OK)
+                        .header("Content-Type", "application/javascript")
+                        .body(Full::new(Bytes::copy_from_slice(&buf)))
+                }
+
+                // Serve Local Tailwind CSS
+                (&Method::GET, "/tailwind") => {
+                    let mut buf = vec![];
+                    let mut file =
+                        File::open("static/css/tailwind.js").expect("Failed to find file");
+                    file.read_to_end(&mut buf)
+                        .expect("Failed to read to buffer");
+                    response
+                        .status(StatusCode::OK)
+                        .header("Content-Type", "text/css")
+                        .body(Full::new(Bytes::copy_from_slice(&buf)))
+                }
 
                 (&Method::GET, "/favicon.ico") => {
                     let mut buf = vec![];
